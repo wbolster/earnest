@@ -6,7 +6,7 @@ try:
     STRING_TYPE = str
 except ImportError:
     # Python 2
-    STRING_TYPE = basestring
+    STRING_TYPE = basestring  # noqa
 
 
 _SENTINEL = object()
