@@ -26,7 +26,7 @@ def test_walk(sample_object):
         print()
 
 
-def test_get_path(sample_object):
+def test_lookup_path(sample_object):
 
     lookup_path = earnest.lookup_path
     assert lookup_path(sample_object, ['a']) == 1
