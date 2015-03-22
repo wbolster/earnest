@@ -33,3 +33,8 @@ def test_lookup_path(sample_object):
     assert lookup_path(sample_object, 'a') == 1
     assert lookup_path(sample_object, ['d', 'nested', 1, 'foo']) == 'bar'
     assert lookup_path(sample_object, 'd.nested.1.foo') == 'bar'
+
+    with pytest.raises(KeyError):
+        lookup_path(sample_object, 'd.nested.1.too-bad')
+
+    assert lookup_path(sample_object, 'd.nested.1.too-bad', 'x') == 'x'
