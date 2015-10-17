@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 try:
     # Python 3
     from functools import reduce
