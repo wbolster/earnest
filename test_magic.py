@@ -2,6 +2,7 @@
 from earnest.magic import (
     StringKeysOnlyMapping,
     MagicMapping,
+    NothingContainer,
 )
 
 import pytest
@@ -72,3 +73,12 @@ def test_magic():
         assert d['s1':bool]
     with pytest.raises(KeyError):
         assert d['b1':str]
+
+
+def test_nothing_container():
+    t = NothingContainer
+    assert t['key'] is t
+    assert t[0] is t
+    assert list(t) == []
+    assert not t
+    assert t['key1']['key2'][3][4] is t

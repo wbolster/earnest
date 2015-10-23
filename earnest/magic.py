@@ -1,5 +1,9 @@
 try:
-    from collections.abc import Mapping, MutableMapping
+    from collections.abc import (
+        Mapping,
+        MutableMapping,
+        Sequence,
+    )
 except ImportError:
     from collections import Mapping, MutableMapping
 
@@ -146,7 +150,6 @@ class MagicMapping(MutableMapping):
         elif isinstance(value, self.__class__):
             pass  # already magic
         elif isinstance(value, Mapping):
-            # TODO: (recursively?) "infect" nested dicts and lists
             value = type(self)(value)
         elif isinstance(value, (list, tuple)):
             raise NotImplementedError
@@ -174,3 +177,25 @@ class MagicMapping(MutableMapping):
     def clear(self):
         # Fast delegation.
         self._mapping.clear()
+
+
+class _NothingContainer(Mapping, Sequence):
+    """
+    Container type emulating both an empty mapping and sequence.
+    """
+
+    def __getitem__(self, key):
+        return NothingContainer
+
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        if False:
+            yield
+
+    def __repr__(self):
+        return '<NothingContainer>'
+
+
+NothingContainer = _NothingContainer()  # singleton
