@@ -110,7 +110,8 @@ class TypeFilteredValueMapping(MutableMapping):
 # TODO: silent mode
 # TODO: lists
 # TODO: how to treat nested container structures?
-# FIXME: Python2 has a 'long' type: use six.integer_types
+# FIXME: Python2 has a 'long' type; always use six.integer_types
+# FIXME: Python2 has a both 'unicode' and 'str'; always use six.string_types
 
 
 class MagicMapping(MutableMapping):
@@ -129,26 +130,29 @@ class MagicMapping(MutableMapping):
         self._mapping = StringKeysOnlyMapping()
         self.update(*args, **kwargs)
 
-    def filter_values_by_type(self, type):
-        return TypeFilteredValueMapping(self, type)
-
     def __getitem__(self, key):
-        # Shorthand to get a filtered view of this mapping: d[int]
-        if key in (bool, float, int, str):
-            return self.filter_values_by_type(key)
-
-        # Type filtering for a single key: d['abc':str]
         if isinstance(key, slice):
-            assert key.step is None  # FIXME: better exception
-            return self[key.stop][key.start]
+            if key.step is not None:
+                raise NotImplementedError("step specified in slice")
+
+            if key.stop not in (bool, float, int, str):
+                raise ValueError("invalid data type filter")
+
+            # Filtered view of this mapping, e.g. d[:int]
+            if key.start is None:
+                return TypeFilteredValueMapping(self, key.stop)
+
+            # Type filtering for a single key, e.g. d['abc':str]
+            return self[:key.stop][key.start]
+
+        elif isinstance(key, tuple):
+            raise NotImplementedError("nested lookup using tuple")
 
         return self._mapping[key]
 
     def __setitem__(self, key, value):
         if isinstance(value, self._SENTINEL_TYPES):
             pass
-        elif isinstance(value, self.__class__):
-            pass  # already magic
         elif isinstance(value, Mapping):
             value = type(self)(value)
         elif isinstance(value, (list, tuple)):

@@ -46,8 +46,16 @@ def test_magic():
     # Normal access
     assert d['s1'] == 'hello'
 
+    # Type filtered single item access
+    assert d['s1':str] == 'hello'
+    assert d['i1':int] == 123
+    with pytest.raises(KeyError):
+        assert d['s1':bool]
+    with pytest.raises(KeyError):
+        assert d['b1':str]
+
     # Type filtered view
-    d2 = d[str]
+    d2 = d[:str]
     print(d2)
     assert d2 is not d
     assert d2['s1'] == 'hello'
@@ -65,14 +73,6 @@ def test_magic():
         # Key exists in underlying mapping, but wrong type so doesn't
         # show up in the filtered proxy.
         del d2['i1']
-
-    # Type filtered single item access
-    assert d['s1':str] == 'hello'
-    assert d['i1':int] == 123
-    with pytest.raises(KeyError):
-        assert d['s1':bool]
-    with pytest.raises(KeyError):
-        assert d['b1':str]
 
 
 def test_nothing_container():
