@@ -4,7 +4,7 @@ try:
         MutableMapping,
         Sequence,
     )
-except ImportError:
+except ImportError:  # pragma: no cover
     from collections import (
         Mapping,
         MutableMapping,
@@ -13,9 +13,6 @@ except ImportError:
 
 import cardinality
 import six
-
-if six.PY2:
-    from future_builtins import filter  # noqa
 
 
 def pairs(*args, **kwargs):
@@ -36,19 +33,33 @@ def pairs(*args, **kwargs):
         yield k, v
 
 
-class StringKeysOnlyMapping(MutableMapping):
-    """Mutable mapping type that only accepts strings as keys."""
+class StringKeysMapping(Mapping):
+    """Mapping type that only accepts strings as keys."""
 
     __slots__ = ('_mapping')
 
-    def __init__(self, *args, **kwargs):
-        self._mapping = {}
-        self.update(*args, **kwargs)
+    def __init__(self, mapping):
+        self._mapping = mapping
 
     def __getitem__(self, key):
         if not isinstance(key, six.string_types):
             raise ValueError("key must be a string")
         return self._mapping[key]
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __repr__(self):
+        return '{0}({1!r})'.format(self.__class__.__name__, self._mapping)
+
+
+class StringKeysMutableMapping(StringKeysMapping, MutableMapping):
+    """Mutable version of StringKeysMapping."""
+
+    __slots__ = ()
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -60,14 +71,14 @@ class StringKeysOnlyMapping(MutableMapping):
             raise ValueError("key must be a string")
         del self._mapping[key]
 
-    def __iter__(self):
-        return iter(self._mapping)
 
-    def __len__(self):
-        return len(self._mapping)
+class StringKeysDict(StringKeysMutableMapping):
 
-    def __repr__(self):
-        return '{0}({1!r})'.format(self.__class__.__name__, self._mapping)
+    __slots__ = ()
+
+    def __init__(self, *args, **kwargs):
+        super(StringKeysDict, self).__init__({})
+        self.update(*args, **kwargs)
 
 
 class TypeFilteredValueMapping(MutableMapping):
@@ -105,10 +116,10 @@ class TypeFilteredValueMapping(MutableMapping):
                 yield key
 
     def __repr__(self):
-        return '<{0} type={1} mapping={2!r}>'.format(
+        return '{0}(mapping={1!r}, type={2} >'.format(
             self.__class__.__name__,
-            self._type.__name__,
-            self._mapping)
+            self._mapping,
+            self._type.__name__)
 
 
 # TODO: silent mode
@@ -118,21 +129,12 @@ class TypeFilteredValueMapping(MutableMapping):
 # FIXME: Python2 has a both 'unicode' and 'str'; always use six.string_types
 
 
-class MagicMapping(MutableMapping):
-    """
-    Magic mapping type with various bells and whistles for the JSON data model.
-    """
-
-    _SENTINEL_TYPES = (
-        six.integer_types
-        + six.string_types
-        + (bool, float, type(None)))
+class MagicMapping(Mapping):
 
     __slots__ = ('_mapping')
 
-    def __init__(self, *args, **kwargs):
-        self._mapping = StringKeysOnlyMapping()
-        self.update(*args, **kwargs)
+    def __init__(self, mapping):
+        self._mapping = mapping
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -154,6 +156,27 @@ class MagicMapping(MutableMapping):
 
         return self._mapping[key]
 
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __repr__(self):
+        return '{0}(mapping={1!r})'.format(
+            self.__class__.__name__,
+            self._mapping)
+
+
+class MagicMutableMapping(MagicMapping, MutableMapping):
+
+    __slots__ = ()
+
+    _SENTINEL_TYPES = (
+        six.integer_types
+        + six.string_types
+        + (bool, float, type(None)))
+
     def __setitem__(self, key, value):
         if isinstance(value, self._SENTINEL_TYPES):
             pass
@@ -171,20 +194,26 @@ class MagicMapping(MutableMapping):
     def __delitem__(self, key):
         del self._mapping[key]
 
-    def __iter__(self):
-        return iter(self._mapping)
-
-    def __len__(self):
-        return len(self._mapping)
-
-    def __repr__(self):
-        return '{0}({1!r})'.format(
-            self.__class__.__name__,
-            dict(self._mapping))
-
     def clear(self):
         # Fast delegation.
         self._mapping.clear()
+
+
+class MagicDict(MagicMutableMapping):
+    """
+    Dict-like type for for the JSON data model with added magic.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, *args, **kwargs):
+        super(MagicDict, self).__init__(StringKeysDict())
+        self.update(*args, **kwargs)
+
+    def __repr__(self):
+        return '{0}(mapping={1!r})'.format(
+            self.__class__.__name__,
+            dict(self._mapping))
 
 
 class _NothingContainer(Mapping, Sequence):

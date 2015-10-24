@@ -1,15 +1,16 @@
 
 from earnest.magic import (
-    StringKeysOnlyMapping,
-    MagicMapping,
+    StringKeysDict,
+    MagicDict,
     NothingContainer,
 )
 
 import pytest
 
 
-def test_string_keys_only_mapping():
-    d = StringKeysOnlyMapping({'a': 1}, b=2, c=3)
+def test_string_keys_dict():
+    d = StringKeysDict({'a': 1}, b=2, c=3)
+    print(d)
     assert d['a'] == 1
     assert 'b' in d
     assert len(d) == 3
@@ -39,7 +40,7 @@ def test_magic():
             'foo': 'bar',
         },
     }
-    d = MagicMapping(original)
+    d = MagicDict(original)
     print(d)
     assert len(d) == len(original)
 
