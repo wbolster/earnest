@@ -93,7 +93,7 @@ class StringKeysMapping(Mapping):
         return len(self._mapping)
 
     def __repr__(self):
-        return '{0}({1!r})'.format(self.__class__.__name__, self._mapping)
+        return repr(self._mapping)
 
 
 class StringKeysMutableMapping(StringKeysMapping, MutableMapping):
@@ -157,7 +157,7 @@ class TypeFilteredValueMapping(MutableMapping):
                 yield key
 
     def __repr__(self):
-        return '{0}(mapping={1!r}, type={2} >'.format(
+        return '{0}(mapping={1!r}, type={2})'.format(
             self.__class__.__name__,
             self._mapping,
             self._type.__name__)
@@ -213,11 +213,6 @@ class MagicMapping(Mapping):
     def __len__(self):
         return len(self._mapping)
 
-    def __repr__(self):
-        return '{0}(mapping={1!r})'.format(
-            self.__class__.__name__,
-            self._mapping)
-
 
 class MagicMutableMapping(MagicMapping, MutableMapping):
 
@@ -246,10 +241,7 @@ class MagicDict(MagicMutableMapping):
         self.update(*args, **kwargs)
 
     def __repr__(self):
-        # FIXME: This shows 'MagicDict(...)' for nested dict, which is ugly.
-        return '{0}(mapping={1!r})'.format(
-            self.__class__.__name__,
-            self._mapping)
+        return repr(self._mapping)
 
 
 class MagicSequence(Sequence):
@@ -294,9 +286,7 @@ class MagicList(MagicMutableSequence):
             self.extend(args[0])
 
     def __repr__(self):
-        return '{0}({1!r})'.format(
-            self.__class__.__name__,
-            self._sequence)
+        return repr(self._sequence)
 
 
 class _NothingContainer(Mapping, Sequence):
