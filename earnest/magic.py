@@ -176,6 +176,7 @@ class MagicMapping(Mapping):
             if not isinstance(value, normalise_type(sl.stop)):
                 raise ValueError("value is not of {0} type: {1!r}".format(
                     sl.stop.__name__, value))
+            return value
 
         # Tuples are a shortcut for nested lookups, e.g. d['a', 'b']
         if isinstance(key, tuple):
