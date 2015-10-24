@@ -5,7 +5,11 @@ try:
         Sequence,
     )
 except ImportError:
-    from collections import Mapping, MutableMapping
+    from collections import (
+        Mapping,
+        MutableMapping,
+        Sequence,
+    )
 
 import cardinality
 import six
