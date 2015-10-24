@@ -138,20 +138,22 @@ class MagicMapping(Mapping):
 
     def __getitem__(self, key):
         if isinstance(key, slice):
-            if key.step is not None:
+            sl = key
+            key = sl.start
+            if sl.step is not None:
                 raise NotImplementedError("step specified in slice")
-
-            if key.stop not in (bool, float, int, str):
+            if sl.stop not in (bool, float, int, str):
                 raise ValueError("invalid data type filter")
+            expected_type = sl.stop
+            type_filtered = TypeFilteredValueMapping(self, expected_type)
+            if sl.start is None:
+                # Filtered view of this mapping, e.g. d[:int]
+                return type_filtered
+            else:
+                # Type filtering for a single key, e.g. d['abc':str]
+                return type_filtered[key]
 
-            # Filtered view of this mapping, e.g. d[:int]
-            if key.start is None:
-                return TypeFilteredValueMapping(self, key.stop)
-
-            # Type filtering for a single key, e.g. d['abc':str]
-            return self[:key.stop][key.start]
-
-        elif isinstance(key, tuple):
+        if isinstance(key, tuple):
             raise NotImplementedError("nested lookup using tuple")
 
         return self._mapping[key]
