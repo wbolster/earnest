@@ -164,10 +164,6 @@ class TypeFilteredValueMapping(MutableMapping):
 
 
 # TODO: silent mode
-# TODO: lists
-# TODO: how to treat nested container structures?
-# FIXME: Python2 has a 'long' type; always use six.integer_types
-# FIXME: Python2 has a both 'unicode' and 'str'; always use six.string_types
 
 
 class MagicMapping(Mapping):
