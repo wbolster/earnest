@@ -137,6 +137,8 @@ class MagicMapping(Mapping):
         self._mapping = mapping
 
     def __getitem__(self, key):
+
+        # Slice lookups are used for type filtering on the value.
         if isinstance(key, slice):
             sl = key
             key = sl.start
@@ -153,8 +155,12 @@ class MagicMapping(Mapping):
                 # Type filtering for a single key, e.g. d['abc':str]
                 return type_filtered[key]
 
+        # Tuples are a shortcut for nested lookups, e.g. d['a', 'b']
         if isinstance(key, tuple):
-            raise NotImplementedError("nested lookup using tuple")
+            current = self
+            for k in key:
+                current = current[k]
+            return current
 
         return self._mapping[key]
 

@@ -36,8 +36,8 @@ def test_magic():
         'i2': 456,
         'b1': True,
         'b2': False,
-        'd': {
-            'foo': 'bar',
+        'd1': {
+            's1': 'v1',
         },
     }
     d = MagicDict(original)
@@ -46,11 +46,21 @@ def test_magic():
 
     # Normal access
     assert d['s1'] == 'hello'
+    assert d.get('s1') == 'hello'
+    assert d.get('s3', 'fallback') == 'fallback'
+
+    # Nested access using tuple notation
+    assert d['d1', 's1'] == 'v1'
+    assert d.get(('d1', 's1')) == 'v1'
+    with pytest.raises(KeyError):
+        d['d1', 'nonexistent']
+    assert d.get(('d1', 'nonexistent'), 'fallback') == 'fallback'
 
     # Type filtered single item access
     assert d['s1':str] == 'hello'
     assert d['i1':int] == 123
-    with pytest.raises(KeyError):
+    assert d['d1', 's1':str] == 'v1'
+    with pytest.raises(KeyError):  # FIXME: ValueError instead?
         assert d['s1':bool]
     with pytest.raises(KeyError):
         assert d['b1':str]
