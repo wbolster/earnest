@@ -15,6 +15,26 @@ import cardinality
 import six
 
 
+# Type normalisation to cater for int/long and str/unicode in Python 2.
+NORMALISED_TYPES = {
+    bool: bool,
+    dict: dict,
+    float: float,
+    int: six.integer_types,
+    list: list,
+    str: six.string_types,
+}
+
+
+def normalise_type(t, lookup=NORMALISED_TYPES):
+    try:
+        return lookup[t]
+    except KeyError:
+        raise ValueError(
+            "type filter must be one of {0}".format(", ".join(
+                sorted(t.__name__ for t in lookup))))
+
+
 def pairs(*args, **kwargs):
     """
     Generator that matches the ``dict()`` constructor. Yields pairs.
@@ -92,12 +112,12 @@ class TypeFilteredValueMapping(MutableMapping):
 
     def __getitem__(self, key):
         value = self._mapping[key]
-        if not isinstance(value, self._type):
+        if not isinstance(value, normalise_type(self._type)):
             raise KeyError(key)
         return value
 
     def __setitem__(self, key, value):
-        if not isinstance(value, self._type):
+        if not isinstance(value, normalise_type(self._type)):
             raise ValueError(
                 "value must be a {0}".format(self._type.__name__))
         self._mapping[key] = value
@@ -111,8 +131,9 @@ class TypeFilteredValueMapping(MutableMapping):
         return cardinality.count(iter(self))
 
     def __iter__(self):
+        normalised_type = normalise_type(self._type)
         for key, value in six.iteritems(self._mapping):
-            if isinstance(value, self._type):
+            if isinstance(value, normalised_type):
                 yield key
 
     def __repr__(self):
@@ -142,25 +163,26 @@ class MagicMapping(Mapping):
         if isinstance(key, slice):
             sl = key
             key = sl.start
+
             if sl.step is not None:
                 raise NotImplementedError("step specified in slice")
-            if sl.stop not in (bool, float, int, str):
-                raise ValueError("invalid data type filter")
-            expected_type = sl.stop
-            type_filtered = TypeFilteredValueMapping(self, expected_type)
+
             if sl.start is None:
                 # Filtered view of this mapping, e.g. d[:int]
-                return type_filtered
-            else:
-                # Type filtering for a single key, e.g. d['abc':str]
-                return type_filtered[key]
+                return TypeFilteredValueMapping(self, sl.stop)
+
+            # Type filtering for a single key, e.g. d['abc':str]
+            value = self[key]
+            if not isinstance(value, normalise_type(sl.stop)):
+                raise ValueError("value is not of {0} type: {1!r}".format(
+                    sl.stop.__name__, value))
 
         # Tuples are a shortcut for nested lookups, e.g. d['a', 'b']
         if isinstance(key, tuple):
-            current = self
+            cur = self
             for k in key:
-                current = current[k]
-            return current
+                cur = cur[k]
+            return cur
 
         return self._mapping[key]
 

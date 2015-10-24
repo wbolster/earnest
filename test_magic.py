@@ -34,6 +34,7 @@ def test_magic():
         's2': 'world',
         'i1': 123,
         'i2': 456,
+        'i3': 2**64,  # 'long' in python 2
         'b1': True,
         'b2': False,
         'd1': {
@@ -59,11 +60,14 @@ def test_magic():
     # Type filtered single item access
     assert d['s1':str] == 'hello'
     assert d['i1':int] == 123
+    assert d['i3':int] == 2**64
     assert d['d1', 's1':str] == 'v1'
-    with pytest.raises(KeyError):  # FIXME: ValueError instead?
+    with pytest.raises(ValueError):
         assert d['s1':bool]
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError):
         assert d['b1':str]
+    with pytest.raises(ValueError):
+        assert d['s1':'invalid-type-filter']
 
     # Type filtered view
     d2 = d[:str]
