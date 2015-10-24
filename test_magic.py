@@ -61,6 +61,9 @@ def test_magic():
     with pytest.raises(KeyError):
         d['d1', 'nonexistent']
     assert d.get(('d1', 'nonexistent'), 'fallback') == 'fallback'
+    with pytest.raises(KeyError):
+        # FIXME: only recurse into container types, not into strings
+        d['s1', 0]
 
     # Type filtered single item access
     assert d['s1':str] == 'hello'
