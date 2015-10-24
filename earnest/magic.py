@@ -17,6 +17,24 @@ import cardinality
 import six
 
 
+SENTINEL_TYPES = (
+    six.integer_types
+    + six.string_types
+    + (bool, float, type(None)))
+
+
+def enchant_value(value):
+    if isinstance(value, SENTINEL_TYPES):
+        return value
+    if isinstance(value, Mapping):
+        return MagicDict(value)
+    if isinstance(value, Sequence):
+        return MagicList(value)
+    raise ValueError(
+        "values of type '{0}' are not allowed".format(
+            value.__class__.__name__))
+
+
 # Type normalisation to cater for int/long and str/unicode in Python 2.
 NORMALISED_TYPES = {
     bool: bool,
@@ -205,25 +223,8 @@ class MagicMutableMapping(MagicMapping, MutableMapping):
 
     __slots__ = ()
 
-    _SENTINEL_TYPES = (
-        six.integer_types
-        + six.string_types
-        + (bool, float, type(None)))
-
     def __setitem__(self, key, value):
-        if isinstance(value, self._SENTINEL_TYPES):
-            pass
-        elif isinstance(value, Mapping):
-            value = type(self)(value)
-        elif isinstance(value, Sequence):
-            # FIXME: abstract class hardcodes a concrete 'sibling' type
-            value = MagicList(value)
-        else:
-            raise ValueError(
-                "values of type '{0}' are not allowed".format(
-                    value.__class__.__name__))
-
-        self._mapping[key] = value
+        self._mapping[key] = enchant_value(value)
 
     def __delitem__(self, key):
         del self._mapping[key]
@@ -270,15 +271,14 @@ class MagicMutableSequence(MagicSequence, MutableSequence):
     __slots__ = ()
 
     def __setitem__(self, index, value):
-        # TODO: check _SENTINEL_TYPES
-        # recursively infect mappings and lists
         self._sequence[index] = value
+        self._sequence[index] = enchant_value(value)
 
     def __delitem__(self, index):
         del self._sequence[index]
 
-    def insert(self, index, object):
-        self._sequence.insert(index, object)
+    def insert(self, index, value):
+        self._sequence.insert(index, enchant_value(value))
 
 
 class MagicList(MagicMutableSequence):
