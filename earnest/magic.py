@@ -46,7 +46,7 @@ NORMALISED_TYPES = {
 }
 
 
-def normalise_type(t, lookup=NORMALISED_TYPES):
+def generalise_type(t, lookup=NORMALISED_TYPES):
     try:
         return lookup[t]
     except KeyError:
@@ -132,12 +132,12 @@ class TypeFilteredValueMapping(MutableMapping):
 
     def __getitem__(self, key):
         value = self._mapping[key]
-        if not isinstance(value, normalise_type(self._type)):
+        if not isinstance(value, generalise_type(self._type)):
             raise KeyError(key)
         return value
 
     def __setitem__(self, key, value):
-        if not isinstance(value, normalise_type(self._type)):
+        if not isinstance(value, generalise_type(self._type)):
             raise ValueError(
                 "value must be a {0}".format(self._type.__name__))
         self._mapping[key] = value
@@ -151,7 +151,7 @@ class TypeFilteredValueMapping(MutableMapping):
         return cardinality.count(iter(self))
 
     def __iter__(self):
-        normalised_type = normalise_type(self._type)
+        normalised_type = generalise_type(self._type)
         for key, value in six.iteritems(self._mapping):
             if isinstance(value, normalised_type):
                 yield key
@@ -189,7 +189,7 @@ class MagicMapping(Mapping):
 
             # Type filtering for a single key, e.g. d['abc':str]
             value = self[key]
-            if not isinstance(value, normalise_type(sl.stop)):
+            if not isinstance(value, generalise_type(sl.stop)):
                 raise ValueError("value is not of {0} type: {1!r}".format(
                     sl.stop.__name__, value))
             return value
