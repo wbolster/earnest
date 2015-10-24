@@ -40,7 +40,11 @@ def test_magic():
         'd1': {
             's1': 'v1',
         },
-        'l1': [1, 2, 3]
+        'l1': [1, 2, 3],
+        'l2': [
+            {'a': [1, 2]},
+            {'b': [3, 4]},
+        ]
     }
     d = MagicDict(original)
     print(d)
