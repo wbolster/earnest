@@ -2,12 +2,14 @@ try:
     from collections.abc import (
         Mapping,
         MutableMapping,
+        MutableSequence,
         Sequence,
     )
 except ImportError:  # pragma: no cover
     from collections import (
         Mapping,
         MutableMapping,
+        MutableSequence,
         Sequence,
     )
 
@@ -42,7 +44,7 @@ def pairs(*args, **kwargs):
     if args:
         if len(args) != 1:
             raise TypeError(
-                "expected at most 1 arguments, got {0:d}".format(len(args)))
+                "expected at most 1 argument, got {0:d}".format(len(args)))
         try:
             it = six.iteritems(args[0])  # mapping type
         except AttributeError:
@@ -213,8 +215,9 @@ class MagicMutableMapping(MagicMapping, MutableMapping):
             pass
         elif isinstance(value, Mapping):
             value = type(self)(value)
-        elif isinstance(value, (list, tuple)):
-            raise NotImplementedError
+        elif isinstance(value, Sequence):
+            # FIXME: abstract class hardcodes a concrete 'sibling' type
+            value = MagicList(value)
         else:
             raise ValueError(
                 "values of type '{0}' are not allowed".format(
@@ -245,7 +248,55 @@ class MagicDict(MagicMutableMapping):
         # FIXME: This shows 'MagicDict(...)' for nested dict, which is ugly.
         return '{0}(mapping={1!r})'.format(
             self.__class__.__name__,
-            dict(self._mapping))
+            self._mapping)
+
+
+class MagicSequence(Sequence):
+
+    __slots__ = ('_sequence')
+
+    def __init__(self, sequence):
+        self._sequence = sequence
+
+    def __getitem__(self, key):
+        return self._sequence[key]
+
+    def __len__(self):
+        return len(self._sequence)
+
+
+class MagicMutableSequence(MagicSequence, MutableSequence):
+
+    __slots__ = ()
+
+    def __setitem__(self, index, value):
+        # TODO: check _SENTINEL_TYPES
+        # recursively infect mappings and lists
+        self._sequence[index] = value
+
+    def __delitem__(self, index):
+        del self._sequence[index]
+
+    def insert(self, index, object):
+        self._sequence.insert(index, object)
+
+
+class MagicList(MagicMutableSequence):
+
+    __slots__ = ()
+
+    def __init__(self, *args):
+        super(MagicList, self).__init__([])
+        if args:
+            if len(args) != 1:
+                raise TypeError(
+                    "expected at most 1 argument, got {0:d}".format(len(args)))
+            self.extend(args[0])
+
+    def __repr__(self):
+        return '{0}({1!r})'.format(
+            self.__class__.__name__,
+            self._sequence)
 
 
 class _NothingContainer(Mapping, Sequence):
