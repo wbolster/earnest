@@ -241,6 +241,7 @@ class MagicDict(MagicMutableMapping):
         self.update(*args, **kwargs)
 
     def __repr__(self):
+        # FIXME: This shows 'MagicDict(...)' for nested dict, which is ugly.
         return '{0}(mapping={1!r})'.format(
             self.__class__.__name__,
             dict(self._mapping))
