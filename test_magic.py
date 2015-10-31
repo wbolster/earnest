@@ -57,18 +57,33 @@ def test_magic():
 
     # Nested access using tuple notation
     assert d['d1', 's1'] == 'v1'
+    assert d['d1', 's1':str] == 'v1'
     assert d.get(('d1', 's1')) == 'v1'
     with pytest.raises(KeyError):
         d['d1', 'nonexistent']
-    assert d.get(('d1', 'nonexistent'), 'fallback') == 'fallback'
     with pytest.raises(KeyError):
-        # FIXME: only recurse into container types, not into strings
+        d[0, 'nonexistent']
+    assert d.get(('d1', 'nonexistent'), 'fallback') == 'fallback'
+
+    # Empty paths
+    with pytest.raises(TypeError):
+        path = ()
+        d[path]
+
+    # Only allow flat tuples containing strings and integers.
+    with pytest.raises(TypeError):
+        d[(1.23,)]
+    with pytest.raises(TypeError):
+        d[(1.23, None)]
+
+    with pytest.raises(KeyError):
         d['s1', 0]
 
     # Type filtered single item access
     assert d['s1':str] == 'hello'
     assert d['i1':int] == 123
     assert d['i3':int] == 2**64
+    assert d['d1':dict] == {'s1': 'v1'}
     assert d['d1', 's1':str] == 'v1'
     with pytest.raises(ValueError):
         assert d['s1':bool]

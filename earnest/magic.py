@@ -175,6 +175,10 @@ class MagicMapping(Mapping):
 
     def __getitem__(self, key):
 
+        # String lookups work as with dicts.
+        if isinstance(key, six.string_types):
+            return self._mapping[key]
+
         # Slice lookups are used for type filtering on the value.
         if isinstance(key, slice):
             sl = key
@@ -194,14 +198,51 @@ class MagicMapping(Mapping):
                     sl.stop.__name__, value))
             return value
 
-        # Tuples are a shortcut for nested lookups, e.g. d['a', 'b']
+        # Tuples are a shortcut for deep lookups in nested containers
+        # (and not into strings which also can be indexed by number).
+        # Examples:
+        # - d['a', 0, 'b']
+        # - d['a', 0, 'b':str]
         if isinstance(key, tuple):
-            cur = self
-            for k in key:
-                cur = cur[k]
-            return cur
+            path = key
+            if not path:
+                raise TypeError("path cannot be empty")
 
-        return self._mapping[key]
+            # Anything up to the last component must be either str or
+            # int to be valid container lookups. Check this before even
+            # trying to evaluate the path to consistently raise
+            # TypeError if the path is malformed.
+            if not all(isinstance(key, (six.string_types + six.integer_types))
+                       for key in path[:-1]):
+                raise TypeError(
+                    "malformed path (path must contain only str and int): "
+                    "{!r}".format(path))
+            container = self
+            for pos, key in enumerate(path[:-1], 1):
+                types_are_correct = (
+                    (isinstance(container, MagicDict)
+                        and isinstance(key, six.string_types))
+                    or (isinstance(container, MagicList)
+                        and isinstance(key, six.integer_types)))
+                if not types_are_correct:
+                    raise KeyError(path[:pos])
+                try:
+                    container = container[key]
+                except (KeyError, IndexError):
+                    raise KeyError(path[:pos])
+
+                if not isinstance(container, (MagicDict, MagicList)):
+                    # Found something but it's not a container.
+                    raise KeyError(path[:pos])
+
+            # Delegate the last lookup (possibly a slice with a type
+            # specification) to the nested container.
+            try:
+                return container[path[-1]]
+            except (KeyError, IndexError):
+                raise KeyError(path)
+
+        raise TypeError("unsupported key: {!r}".format(key))
 
     def __iter__(self):
         return iter(self._mapping)
