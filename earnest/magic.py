@@ -83,7 +83,7 @@ class StringKeysMapping(Mapping):
 
     def __getitem__(self, key):
         if not isinstance(key, six.string_types):
-            raise ValueError("key must be a string")
+            raise TypeError("key must be a string")
         return self._mapping[key]
 
     def __iter__(self):
@@ -103,12 +103,12 @@ class StringKeysMutableMapping(StringKeysMapping, MutableMapping):
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
-            raise ValueError("key must be a string")
+            raise TypeError("key must be a string")
         self._mapping[key] = value
 
     def __delitem__(self, key):
         if not isinstance(key, six.string_types):
-            raise ValueError("key must be a string")
+            raise TypeError("key must be a string")
         del self._mapping[key]
 
 

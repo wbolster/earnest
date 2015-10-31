@@ -20,11 +20,11 @@ def test_string_keys_dict():
     assert d.pop('foo') == 'bar'
     assert 'foo' not in d
     assert sorted(d) == ['a', 'b', 'c']
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         d[123]
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         d[123] = 456
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         del d[123]
 
 
