@@ -17,14 +17,14 @@ import cardinality
 import six
 
 
-SENTINEL_TYPES = (
+ATOMIC_TYPES = (
     six.integer_types
     + six.string_types
     + (bool, float, type(None)))
 
 
 def enchant_value(value):
-    if isinstance(value, SENTINEL_TYPES):
+    if isinstance(value, ATOMIC_TYPES):
         return value
     if isinstance(value, Mapping):
         return MagicDict(value)
