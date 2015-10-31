@@ -38,10 +38,10 @@ def enchant_value(value):
 # Type normalisation to cater for int/long and str/unicode in Python 2.
 NORMALISED_TYPES = {
     bool: bool,
-    dict: dict,
+    dict: Mapping,
     float: float,
     int: six.integer_types,
-    list: list,
+    list: Sequence,  # FIXME: this also matches strings :-(
     str: six.string_types,
 }
 
