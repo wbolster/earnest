@@ -55,24 +55,6 @@ def generalise_type(t, lookup=NORMALISED_TYPES):
                 sorted(t.__name__ for t in lookup))))
 
 
-def pairs(*args, **kwargs):
-    """
-    Generator that matches the ``dict()`` constructor. Yields pairs.
-    """
-    if args:
-        if len(args) != 1:
-            raise TypeError(
-                "expected at most 1 argument, got {0:d}".format(len(args)))
-        try:
-            it = six.iteritems(args[0])  # mapping type
-        except AttributeError:
-            it = iter(args[0])  # sequence of pairs
-        for k, v in it:
-            yield k, v
-    for k, v in six.iteritems(kwargs):
-        yield k, v
-
-
 class StringKeysMapping(Mapping):
     """Mapping type that only accepts strings as keys."""
 
