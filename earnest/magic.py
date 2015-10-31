@@ -233,22 +233,7 @@ class MagicMapping(Mapping):
         return len(self._mapping)
 
 
-class MagicMutableMapping(MagicMapping, MutableMapping):
-
-    __slots__ = ()
-
-    def __setitem__(self, key, value):
-        self._mapping[key] = enchant_value(value)
-
-    def __delitem__(self, key):
-        del self._mapping[key]
-
-    def clear(self):
-        # Fast delegation.
-        self._mapping.clear()
-
-
-class MagicDict(MagicMutableMapping):
+class MagicDict(MagicMapping, MutableMapping):
     """
     Dict-like type for for the JSON data model with added magic.
     """
@@ -261,6 +246,16 @@ class MagicDict(MagicMutableMapping):
 
     def __repr__(self):
         return repr(self._mapping)
+
+    def __setitem__(self, key, value):
+        self._mapping[key] = enchant_value(value)
+
+    def __delitem__(self, key):
+        del self._mapping[key]
+
+    def clear(self):
+        # Fast delegation.
+        self._mapping.clear()
 
 
 class MagicSequence(Sequence):
@@ -277,22 +272,7 @@ class MagicSequence(Sequence):
         return len(self._sequence)
 
 
-class MagicMutableSequence(MagicSequence, MutableSequence):
-
-    __slots__ = ()
-
-    def __setitem__(self, index, value):
-        self._sequence[index] = value
-        self._sequence[index] = enchant_value(value)
-
-    def __delitem__(self, index):
-        del self._sequence[index]
-
-    def insert(self, index, value):
-        self._sequence.insert(index, enchant_value(value))
-
-
-class MagicList(MagicMutableSequence):
+class MagicList(MagicSequence, MutableSequence):
 
     __slots__ = ()
 
@@ -306,6 +286,16 @@ class MagicList(MagicMutableSequence):
 
     def __repr__(self):
         return repr(self._sequence)
+
+    def __setitem__(self, index, value):
+        self._sequence[index] = value
+        self._sequence[index] = enchant_value(value)
+
+    def __delitem__(self, index):
+        del self._sequence[index]
+
+    def insert(self, index, value):
+        self._sequence.insert(index, enchant_value(value))
 
 
 class _NothingContainer(Mapping, Sequence):
