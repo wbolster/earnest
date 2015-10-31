@@ -1,6 +1,5 @@
 
 from earnest.magic import (
-    StringKeysDict,
     MagicDict,
     NothingContainer,
 )
@@ -8,8 +7,8 @@ from earnest.magic import (
 import pytest
 
 
-def test_string_keys_dict():
-    d = StringKeysDict({'a': 1}, b=2, c=3)
+def test_string_keys_only():
+    d = MagicDict({'a': 1}, b=2, c=3)
     print(d)
     assert d['a'] == 1
     assert 'b' in d

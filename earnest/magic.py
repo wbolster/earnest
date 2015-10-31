@@ -55,54 +55,6 @@ def generalise_type(t, lookup=NORMALISED_TYPES):
                 sorted(t.__name__ for t in lookup))))
 
 
-class StringKeysMapping(Mapping):
-    """Mapping type that only accepts strings as keys."""
-
-    __slots__ = ('_mapping')
-
-    def __init__(self, mapping):
-        self._mapping = mapping
-
-    def __getitem__(self, key):
-        if not isinstance(key, six.string_types):
-            raise TypeError("key must be a string")
-        return self._mapping[key]
-
-    def __iter__(self):
-        return iter(self._mapping)
-
-    def __len__(self):
-        return len(self._mapping)
-
-    def __repr__(self):
-        return repr(self._mapping)
-
-
-class StringKeysMutableMapping(StringKeysMapping, MutableMapping):
-    """Mutable version of StringKeysMapping."""
-
-    __slots__ = ()
-
-    def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
-            raise TypeError("key must be a string")
-        self._mapping[key] = value
-
-    def __delitem__(self, key):
-        if not isinstance(key, six.string_types):
-            raise TypeError("key must be a string")
-        del self._mapping[key]
-
-
-class StringKeysDict(StringKeysMutableMapping):
-
-    __slots__ = ()
-
-    def __init__(self, *args, **kwargs):
-        super(StringKeysDict, self).__init__({})
-        self.update(*args, **kwargs)
-
-
 class TypeFilteredValueMapping(MutableMapping):
     """A mapping proxy that only handles values of a certain type."""
 
@@ -241,16 +193,20 @@ class MagicDict(MagicMapping, MutableMapping):
     __slots__ = ()
 
     def __init__(self, *args, **kwargs):
-        super(MagicDict, self).__init__(StringKeysDict())
+        super(MagicDict, self).__init__({})
         self.update(*args, **kwargs)
 
     def __repr__(self):
         return repr(self._mapping)
 
     def __setitem__(self, key, value):
+        if not isinstance(key, six.string_types):
+            raise TypeError("key must be a string")
         self._mapping[key] = enchant_value(value)
 
     def __delitem__(self, key):
+        if not isinstance(key, six.string_types):
+            raise TypeError("key must be a string")
         del self._mapping[key]
 
     def clear(self):
