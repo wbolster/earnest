@@ -288,7 +288,6 @@ class MagicList(MagicSequence, MutableSequence):
         return repr(self._sequence)
 
     def __setitem__(self, index, value):
-        self._sequence[index] = value
         self._sequence[index] = enchant_value(value)
 
     def __delitem__(self, index):
