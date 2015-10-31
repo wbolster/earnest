@@ -109,34 +109,32 @@ class MagicMapping(Mapping):
 
     def __getitem__(self, key):
 
-        # String lookups work as with dicts.
+        # String lookups work as with dicts. Example: d["key"]
         if isinstance(key, six.string_types):
             return self._mapping[key]
 
-        # Slice lookups are used for type filtering on the value.
+        # Slice lookups check the type of the value. Example: d["key":int]
         if isinstance(key, slice):
             sl = key
-            key = sl.start
-
             if sl.step is not None:
-                raise NotImplementedError("step specified in slice")
-
-            if sl.start is None:
+                raise TypeError("key slice must not contain a 'step' value")
+            key = sl.start
+            requested_type = sl.stop
+            if key is None:
                 # Filtered view of this mapping, e.g. d[:int]
-                return TypeFilteredValueMapping(self, sl.stop)
-
-            # Type filtering for a single key, e.g. d['abc':str]
-            value = self[key]
-            if not isinstance(value, generalise_type(sl.stop)):
-                raise ValueError("value is not of {0} type: {1!r}".format(
-                    sl.stop.__name__, value))
-            return value
+                return TypeFilteredValueMapping(self, requested_type)
+            else:
+                # Type filtering for a single key, e.g. d['abc':str]
+                value = self[key]
+                if not isinstance(value, generalise_type(requested_type)):
+                    raise ValueError("value is not of {0} type: {1!r}".format(
+                        sl.stop.__name__, value))
+                return value
 
         # Tuples are a shortcut for deep lookups in nested containers
         # (and not into strings which also can be indexed by number).
-        # Examples:
-        # - d['a', 0, 'b']
-        # - d['a', 0, 'b':str]
+        # The last component may specify a type using slice syntax.
+        # Examples: d['a', 0, 'b'] and d['a', 0, 'b':str]
         if isinstance(key, tuple):
             path = key
             if not path:
